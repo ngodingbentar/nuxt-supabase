@@ -13,12 +13,18 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div>
-    <h2>
-      Sign in to your account
-    </h2>
-    <button @click="auth.signInWithOAuth({ provider: 'github', options: { redirectTo } })">
-      Sign in with Github
-    </button>
+  <div class="flex flex-col items-center justify-center h-screen text-center">
+    <div>
+      <h2>
+        Sign in to your account
+      </h2>
+      <UButton
+        class="mt-4"
+        color="blue"
+        @click="auth.signInWithOAuth({ provider: 'github', options: { redirectTo } })"
+      >
+        Sign in with Github
+      </UButton>
+    </div>
   </div>
 </template>
