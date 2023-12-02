@@ -2,7 +2,7 @@
 const user = useSupabaseUser()
 const { auth } = useSupabaseClient()
 
-const redirectTo = `${useRuntimeConfig().public.baseUrl}/confirm`
+const redirectTo = `https://nb-supabase.vercel.app/confirm`
 
 watchEffect(() => {
   if (user.value) {
