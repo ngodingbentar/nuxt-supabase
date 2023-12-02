@@ -9,9 +9,9 @@
       </UButton>
     </div>
     <div>
-      <UTable v-model="selected" :rows="tasks" :columns="columns">
+      <UTable :rows="tasks" :columns="columns">
         <template #name-data="{ row }">
-          <span :class="[selected.find(person => person.id === row.id) && 'text-primary-500 dark:text-primary-400']">{{ row.name }}</span>
+          <span class="text-primary-500 dark:text-primary-400">{{ row.name }}</span>
         </template>
 
         <template #actions-data="{ row }">
@@ -25,12 +25,26 @@
 </template>
 
 <script setup lang="ts">
+import type { ITask } from '~~/types'
 const client = useSupabaseClient()
 const tasks = ref([])
 
-const {data} = await useAsyncData('tasks', async () => client.from('tasks').select('*').order('id'))
-console.log('data', data.value?.data)
-tasks.value = data.value?.data || []
+init()
+async function init () {
+  const {data} = await useAsyncData('tasks', async () => client.from('tasks').select('*').order('id'))
+  tasks.value = data.value?.data || []
+}
+
+const completeTask = async (task: ITask) => {
+  await client.from('tasks').update({ completed: !task.completed }).match({ id: task.id })
+  init()
+}
+
+const removeTask = async (task: ITask) => {
+  tasks.value = tasks.value.filter((t: ITask) => t.id !== task.id)
+  await client.from('tasks').delete().match({ id: task.id })
+  init()
+}
 
 const logout = async () => {
   await client.auth.signOut()
@@ -51,25 +65,16 @@ const columns = [{
   key: 'actions'
 }]
 
-const items = (row) => [
+const items = (row: ITask) => [
   [{
-    label: 'Edit',
+    label: row.completed ? 'Uncomplete' : 'Complete',
     icon: 'i-heroicons-pencil-square-20-solid',
-    click: () => console.log('Edit', row.id)
+    click: () => completeTask(row)
   }, {
-    label: 'Duplicate',
-    icon: 'i-heroicons-document-duplicate-20-solid'
-  }], [{
-    label: 'Archive',
-    icon: 'i-heroicons-archive-box-20-solid'
-  }, {
-    label: 'Move',
-    icon: 'i-heroicons-arrow-right-circle-20-solid'
-  }], [{
     label: 'Delete',
-    icon: 'i-heroicons-trash-20-solid'
+    icon: 'i-heroicons-trash-20-solid',
+    click: () => removeTask(row)
   }]
 ]
 
-const selected = ref([tasks.value[1]])
 </script>
