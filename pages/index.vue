@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div class="flex justify-end p-4">
+  <div class="p-4">
+    <div class="flex justify-end">
       <UButton
         color="red"
         @click="logout"
@@ -8,31 +8,38 @@
         Logout
       </UButton>
     </div>
-    <div>
-      <UTable :rows="tasks" :columns="columns">
-        <template #name-data="{ row }">
-          <span class="text-primary-500 dark:text-primary-400">{{ row.name }}</span>
-        </template>
-
-        <template #actions-data="{ row }">
-          <UDropdown :items="items(row)">
-            <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" />
-          </UDropdown>
-        </template>
-      </UTable> 
-    </div>
+    <AddTask @add-task="addTask" :loading="loading" />
+    <TableTasks :tasks="tasks" @complete-task="completeTask" @remove-task="removeTask" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ITask } from '~~/types'
 const client = useSupabaseClient()
-const tasks = ref([])
+const user = useSupabaseUser()
+const tasks = ref([] as ITask[])
+const loading = ref(false)
 
 init()
 async function init () {
   const {data} = await useAsyncData('tasks', async () => client.from('tasks').select('*').order('id'))
   tasks.value = data.value?.data || []
+}
+
+async function addTask (payload: string) {
+  loading.value = true
+
+  const { data } = await client.from('tasks')
+    .upsert({
+      user: user.value.id,
+      title: payload,
+      completed: false
+    })
+    .select('id, title, completed')
+    .single()
+
+  tasks.value.push(data as ITask)
+  loading.value = false
 }
 
 const completeTask = async (task: ITask) => {
@@ -50,31 +57,5 @@ const logout = async () => {
   await client.auth.signOut()
   navigateTo('/login')
 }
-
-// table
-const columns = [{
-  key: 'title',
-  label: 'Title'
-}, {
-  key: 'user',
-  label: 'user'
-}, {
-  key: 'completed',
-  label: 'completed'
-}, {
-  key: 'actions'
-}]
-
-const items = (row: ITask) => [
-  [{
-    label: row.completed ? 'Uncomplete' : 'Complete',
-    icon: 'i-heroicons-pencil-square-20-solid',
-    click: () => completeTask(row)
-  }, {
-    label: 'Delete',
-    icon: 'i-heroicons-trash-20-solid',
-    click: () => removeTask(row)
-  }]
-]
 
 </script>
