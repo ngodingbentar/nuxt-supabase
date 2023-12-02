@@ -9,7 +9,7 @@
       </UButton>
     </div>
     <AddTask @add-task="addTask" :loading="loading" />
-    <TableTasks :tasks="tasks" @complete-task="completeTask" @remove-task="removeTask" />
+    <TableTasks v-if="tasks.length > 0" :tasks="tasks" @complete-task="completeTask" @remove-task="removeTask" />
   </div>
 </template>
 
