@@ -77,6 +77,6 @@ async function signInWithEmail() {
     email: state.email || '',
     password: state.password || ''
   })
-  isError.value = error?.message || 'Something went wrong'
+  if (error) isError.value = error?.message || 'Something went wrong'
 }
 </script>
